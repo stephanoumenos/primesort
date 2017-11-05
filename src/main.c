@@ -4,60 +4,8 @@
 #include <search.h>
 
 #define n_threads 8
-#define n_numbers 10000
-
-/* Binary search tree */
-
-struct _node
-{
-    int val;
-    struct _node* esq;
-    struct _node* dir;
-};
-
-typedef struct _node node;
-
-node* inserir(node* elem, int num)
-{
-    if(!elem){
-        node* new = malloc(sizeof(node));
-        new->esq = NULL;
-        new->dir = NULL;
-        new->val = num;
-        return new;
-    }
-    if(num<elem->val)
-        elem->esq=inserir(elem->esq,num);
-    else
-        elem->dir=inserir(elem->dir,num);
-    return elem; // Nao mudou
-}
-
-void print_tree(node* raiz)
-{
-    if(raiz){
-        int i;
-        print_tree(raiz->dir);
-        printf("%d\n",raiz->val);
-        print_tree(raiz->esq);
-    }
-}
-
-int search_tree(node* raiz, int chave)
-{
-    if(raiz){
-        if(raiz->val>chave)
-            return search_tree(raiz->esq,chave);
-        else if(raiz->val<chave)
-            return search_tree(raiz->dir,chave);
-        else{
-            return 1; // Achou
-        }
-    }
-    return 0; // Nao achou
-}
-
-/* ------------------------------------------- */
+#define n_numbers 20000
+#define stack_size 2000000 // 2000000*sizeof(int) = 4MB
 
 int verifica_primos(int num)
 {
@@ -73,20 +21,33 @@ int verifica_primos(int num)
     return 1;
 }
 
-
-node* root = NULL; // Global root
-
 pthread_mutex_t chave = PTHREAD_MUTEX_INITIALIZER;
+
+long int main_stack_counter = 0;
+int main_stack[stack_size];
 
 void* verifica_numero(void* val)
 {
-    int* number = (int*) val;
-    if(!verifica_primos(*number)){
-        pthread_mutex_lock(&chave);
-        root=inserir(root,*number);
-        pthread_mutex_unlock(&chave);
+    int i,j=0, nao_primos[n_numbers+1];
+    int* numbers = (int*) val;
+    for(i=0;i<n_numbers;i++){
+        if(numbers[i]==-1)
+            break;
+        if(!verifica_primos(numbers[i]))
+            nao_primos[j++]=numbers[i];
     }
+    if(!j)
+        return NULL;
+    pthread_mutex_lock(&chave);
+       for(--j;j>0;j--)
+          main_stack[main_stack_counter++]=nao_primos[j]; 
+    pthread_mutex_unlock(&chave);
     return NULL;
+}
+
+int cmp(const void* a, const void* b)
+{
+    return (* (int*) a-*(int*) (b));
 }
 
 int main()
@@ -98,21 +59,23 @@ int main()
         for(i=0;i<n_threads;i++){
             for(j=0;j<n_numbers;j++){
                 scanf("%d", &numbers[i][j]);
-                if(numbers[i]==-1){
+                if(numbers[i][j]==-1){
                     stop_all=1;
-                    break;
+                    goto work;
                 }
-            if(stop_all)
-                break
             }
         }
-        for(j=i-1;j>=0;j--)
+    work:
+        for(j=i>8? i-1:i;j>=0;j--)
             pthread_create(&threads[j],NULL,verifica_numero,&numbers[j]);
-        for(j=i-1;j>=0;j--)
+        for(j= i>8?i-1:i;j>=0;j--)
             pthread_join(threads[j],NULL);
         if(stop_all)
             break;
     }
-    print_tree(root);
+    printf("YOLOLO: %ld", main_stack_counter);
+    qsort(main_stack,main_stack_counter-1,sizeof(int),cmp);
+    for(main_stack_counter--;main_stack_counter>0;main_stack_counter--)
+        printf("%d\n",main_stack[main_stack_counter]);
     return 0;
 }
