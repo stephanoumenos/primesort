@@ -4,7 +4,7 @@
 #include <search.h>
 
 #define n_threads 8
-#define n_numbers 20000
+#define n_numbers 50000
 #define stack_size 2000000 // 2000000*sizeof(int) = 4MB
 
 int verifica_primos(int num)
@@ -39,8 +39,8 @@ void* verifica_numero(void* val)
     if(!j)
         return NULL;
     pthread_mutex_lock(&chave);
-       for(--j;j>0;j--)
-          main_stack[main_stack_counter++]=nao_primos[j]; 
+   for(--j;j>=0;j--)
+      main_stack[main_stack_counter++]=nao_primos[j]; 
     pthread_mutex_unlock(&chave);
     return NULL;
 }
@@ -66,16 +66,15 @@ int main()
             }
         }
     work:
-        for(j=i>8? i-1:i;j>=0;j--)
+        for(j=i>n_threads? n_threads-1:i;j>=0;j--)
             pthread_create(&threads[j],NULL,verifica_numero,&numbers[j]);
-        for(j= i>8?i-1:i;j>=0;j--)
+        for(j= i>n_threads?n_threads-1:i;j>=0;j--)
             pthread_join(threads[j],NULL);
         if(stop_all)
             break;
     }
-    printf("YOLOLO: %ld", main_stack_counter);
-    qsort(main_stack,main_stack_counter-1,sizeof(int),cmp);
-    for(main_stack_counter--;main_stack_counter>0;main_stack_counter--)
+    qsort(main_stack,main_stack_counter,sizeof(int),cmp);
+    for(main_stack_counter--;main_stack_counter>=0;main_stack_counter--)
         printf("%d\n",main_stack[main_stack_counter]);
     return 0;
 }
