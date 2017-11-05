@@ -3,7 +3,8 @@
 #include <pthread.h>
 #include <search.h>
 
-#define n_threads 12000
+#define n_threads 8
+#define n_numbers 10000
 
 /* Binary search tree */
 
@@ -90,14 +91,19 @@ void* verifica_numero(void* val)
 
 int main()
 {
-    int numbers[n_threads],i,j, stop_all=0;
+    int i,j,stop_all=0;
+    int numbers[n_threads][n_numbers];
     pthread_t threads[n_threads];
     while(1){
         for(i=0;i<n_threads;i++){
-            scanf("%d", &numbers[i]);
-            if(numbers[i]==-1){
-                stop_all=1;
-                break;
+            for(j=0;j<n_numbers;j++){
+                scanf("%d", &numbers[i][j]);
+                if(numbers[i]==-1){
+                    stop_all=1;
+                    break;
+                }
+            if(stop_all)
+                break
             }
         }
         for(j=i-1;j>=0;j--)
