@@ -3,6 +3,8 @@
 #include <pthread.h>
 #include <search.h>
 
+#define n_threads 12000
+
 /* Binary search tree */
 
 struct _node
@@ -75,8 +77,9 @@ node* root = NULL; // Global root
 
 pthread_mutex_t chave = PTHREAD_MUTEX_INITIALIZER;
 
-void *thread_job(int* number)
+void* verifica_numero(void* val)
 {
+    int* number = (int*) val;
     if(!verifica_primos(*number)){
         pthread_mutex_lock(&chave);
         root=inserir(root,*number);
@@ -87,21 +90,20 @@ void *thread_job(int* number)
 
 int main()
 {
-    int numbers[8],i,j, stop_all=0;
-    pthread_t t1,t2,t3,t4,t5,t6,t7,t8;
-    pthread_t threads[8] = {t1,t2,t3,t4,t5,t6,t7,t8};
+    int numbers[n_threads],i,j, stop_all=0;
+    pthread_t threads[n_threads];
     while(1){
-        for(i=0;i<8;++i){
+        for(i=0;i<n_threads;i++){
             scanf("%d", &numbers[i]);
             if(numbers[i]==-1){
-                break;
                 stop_all=1;
+                break;
             }
         }
-        for(j=i-1;j>0;j--)
-            pthread_create(&threads[i],NULL,thread_job,&numbers[i]);
-        for(i=i-1;i>0;i--)
-            pthread_join(threads[i],NULL);
+        for(j=i-1;j>=0;j--)
+            pthread_create(&threads[j],NULL,verifica_numero,&numbers[j]);
+        for(j=i-1;j>=0;j--)
+            pthread_join(threads[j],NULL);
         if(stop_all)
             break;
     }
