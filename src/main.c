@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <search.h>
 
-#define n_threads 8
-#define n_numbers 50000
-#define stack_size 2000000 // 2000000*sizeof(int) = 4MB
+#define n_threads 100
+#define n_numbers 2500
+#define stack_size 10000000 // 10000000 * sizeof(int) = 20MB
 
 int verifica_primos(int num)
 {
