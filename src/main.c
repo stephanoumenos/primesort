@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define n_threads 100
-#define n_numbers 2500
+#define n_threads 16
+#define n_numbers 5000
 #define stack_size 10000000 // 10000000 * sizeof(int) = 20MB
 
 int verifica_primos(int num)
@@ -27,7 +27,7 @@ int main_stack[stack_size];
 
 void* verifica_numero(void* val)
 {
-    int i,j=0, nao_primos[n_numbers+1];
+    int i,j=0, nao_primos[n_numbers];
     int* numbers = (int*) val;
     for(i=0;i<n_numbers;i++){
         if(numbers[i]==-1)
@@ -55,7 +55,7 @@ int main()
     int numbers[n_threads][n_numbers];
     pthread_t threads[n_threads];
     while(1){
-        for(i=0;i<n_threads;i++){
+        for(i=0;i<n_threads;i++)
             for(j=0;j<n_numbers;j++){
                 scanf("%d", &numbers[i][j]);
                 if(numbers[i][j]==-1){
@@ -63,11 +63,10 @@ int main()
                     goto work;
                 }
             }
-        }
     work:
-        for(j=i>n_threads? n_threads-1:i;j>=0;j--)
+        for(j=0;j<=(i>n_threads-1?n_threads-1:i);j++)
             pthread_create(&threads[j],NULL,verifica_numero,&numbers[j]);
-        for(j= i>n_threads?n_threads-1:i;j>=0;j--)
+        for(j=0;j<=(i>n_threads-1?n_threads-1:i);j++)
             pthread_join(threads[j],NULL);
         if(stop_all)
             break;
