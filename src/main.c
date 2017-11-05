@@ -38,7 +38,7 @@ void* verifica_numero(void* val)
     if(!j)
         return NULL;
     pthread_mutex_lock(&chave);
-   for(--j;j>=0;j--)
+    for(--j;j>=0;j--)
       main_stack[main_stack_counter++]=nao_primos[j]; 
     pthread_mutex_unlock(&chave);
     return NULL;
