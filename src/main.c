@@ -4,7 +4,8 @@
 
 #define n_threads 16
 #define n_numbers 5000
-#define stack_size 10000000 // 10000000 * sizeof(int) = 20MB
+#define initial_stack_size 1000 // 1000*sizeof(int) = 2KB
+/* Obs: It's alright to use such a small array. It's very quick to make new ones and this makes the code much more portable. */
 
 int verifica_primos(int num)
 {
@@ -23,7 +24,8 @@ int verifica_primos(int num)
 pthread_mutex_t chave = PTHREAD_MUTEX_INITIALIZER;
 
 long int main_stack_counter = 0;
-int main_stack[stack_size];
+int* main_stack=NULL; // Temos que alocar o inicial no main porque o C é meio chato com isso
+long int stack_size = initial_stack_size; // To keep track of current stack size
 
 void* verifica_numero(void* val)
 {
@@ -38,8 +40,19 @@ void* verifica_numero(void* val)
     if(!j)
         return NULL;
     pthread_mutex_lock(&chave);
-    for(--j;j>=0;j--)
-      main_stack[main_stack_counter++]=nao_primos[j]; 
+    for(--j;j>=0;j--){
+        if(main_stack_counter<stack_size)
+            main_stack[main_stack_counter++]=nao_primos[j]; 
+        else{ // Oh jeez, we need a bigger array!
+            int* new_stack = malloc(2*stack_size*sizeof(int));
+            for(long int i=0;i<main_stack_counter;i++)
+                new_stack[i]=main_stack[i]; // Copies old stack
+            stack_size*=2;
+            free(main_stack);
+            main_stack=new_stack;
+            main_stack[main_stack_counter++]=nao_primos[j];
+        }
+    }
     pthread_mutex_unlock(&chave);
     return NULL;
 }
@@ -51,6 +64,7 @@ int cmp(const void* a, const void* b)
 
 int main()
 {
+    main_stack = malloc(initial_stack_size*sizeof(int));
     int i,j,stop_all=0;
     int numbers[n_threads][n_numbers];
     pthread_t threads[n_threads];
