@@ -88,5 +88,6 @@ int main()
     qsort(main_stack,main_stack_counter,sizeof(int),cmp);
     for(main_stack_counter--;main_stack_counter>=0;main_stack_counter--)
         printf("%d\n",main_stack[main_stack_counter]);
+    free(main_stack);
     return 0;
 }
